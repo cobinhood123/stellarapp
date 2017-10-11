@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>html stellar</title>
+
+<script src="jquery-3.2.1.min.js"></script>
+<script src="underscore-min.js"></script>
+<script src="backbone-min.js"></script>
+
+<script src="stellar-sdk.min.js"></script>
+
+</head>
+<body>
+
+<div id="SourceAccountId"></div>
+<div id="SourceAccountSequenceNumber"></div>
+<div id="SourceAccountAsset"></div>
+<div id="SourceAccountBalance"></div>
+
+<div>send to AccountId: 
+<input type="text"  id="sendToAccountId" size="56">
+</div>
+
+<div>send to  Asset: 
+<input type="text"  id="sendToAsset" size="12">
+</div>
+
+<div>send to  Amount: 
+<input type="text"  id="sendToAmount" size="18">
+</div>
+<div>send to  Memo: 
+<input type="text"  id="sendToMemo" size="28">
+</div>
+ <button id="send">Send</button>
+<div id="resultHash"></div>
+
+
+<script type="text/template" id="displayAccountDetails">
+
+<div> <%= s1 %>  :  
+	<%  if(s2 == "native")   %>
+	 XML 
+	<% else %> 
+	 <%= s2 %>  
+
+</div>
+	
+
+
+</script>
+
+
+<script type="text/template" id="displayALink">
+	
+<a href="http://testnet.stellarchain.io/tx/<%= hash %>"  target="_blank">go to check : <%= hash %> </a><br>
+
+
+</script>
+
+
+
+<script type="text/javascript">
+	
+
+
+$( document ).ready(function() {
+
+var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+StellarSdk.Network.useTestNetwork();
+
+var SourceAccountSequenceNumber =""
+
+var keypair = StellarSdk.Keypair.fromSecret('SCIX75EQXSBNFMASKQPHBQQB263BNJOINZHLTVUATABQIREMVXFSCE3F');
+var SourceAccountId = keypair.publicKey()
+
+
+$( "#send" ).click(function() {
+  
+   var sendToAccountId = $("#sendToAccountId").val()
+     var sendToAsset = $("#sendToAsset").val()
+  
+     var sendToAmount = $("#sendToAmount").val()
+      var sendToMemo = $("#sendToMemo").val()
+
+sendToAccountIdAmount(SourceAccountId,SourceAccountSequenceNumber,sendToAccountId,sendToAsset,sendToAmount,sendToMemo)
+ 
+
+
+});
+
+
+
+
+function sendToAccountIdAmount(SourceAccountId,SourceAccountSequenceNumber,sendToAccountId,sendToAsset,sendToAmount,sendToMemo){
+
+	var memo = StellarSdk.Memo.text(sendToMemo);
+
+var account=new StellarSdk.Account(SourceAccountId,SourceAccountSequenceNumber);
+
+var transaction = new StellarSdk.TransactionBuilder(account,{memo:memo})
+        // add a payment operation to the transaction
+        .addOperation(StellarSdk.Operation.payment({
+                destination: sendToAccountId,
+                asset: StellarSdk.Asset.native(),
+                amount: sendToAmount // 100.50 XLM
+            }))
+     
+        .build();
+
+
+
+transaction.sign(keypair); // sign the transaction
+
+server.submitTransaction(transaction)
+    .then(function (transactionResult) {
+        console.log(transactionResult);
+
+
+
+getSourceAccountDetail(SourceAccountId)
+
+// $("#resultHash").append(" <a href=\"http:\/\/testnet.stellarchain.io\/tx\/"+transactionResult.hash+ "\" target=\"_blank\">go to check : "+transactionResult.hash+"<\/a><br> ")
+
+var aLinkTemplate = _.template($("#displayALink").html());
+
+$("#resultHash").append(aLinkTemplate({ hash :transactionResult.hash}));
+
+
+    })
+    .catch(function (err) {
+        console.error(err);
+    });
+
+
+
+
+
+
+
+}
+
+
+
+// Public Key
+// GDVHYIOJ6VJ2H3QOFPQTKNAAMZC2PYNJVSKDDAJ7RBMT3X2K3B55NLBT
+// Secret Key
+// SCIX75EQXSBNFMASKQPHBQQB263BNJOINZHLTVUATABQIREMVXFSCE3F
+
+
+
+
+function getSourceAccountDetail(SourceAccountId){
+
+var compiled = _.template($("#displayAccountDetails").html());
+
+
+server.accounts()
+  .accountId(SourceAccountId)
+  .call()
+  .then(function (accountResult) {
+
+console.log(accountResult)
+
+    $("#SourceAccountId").html(  
+    	compiled({ s1:"accountId", s2:SourceAccountId}))
+    $("#SourceAccountAsset").html(compiled({s1:"asset",s2: accountResult.balances[0].asset_type }) )
+    $("#SourceAccountBalance").html(compiled({s1:"balance",s2: accountResult.balances[0].balance }) )
+    $("#SourceAccountSequenceNumber").html(compiled({s1:"sequence",s2: accountResult.sequence }) )
+    SourceAccountSequenceNumber = accountResult.sequence
+  })
+  .catch(function (err) {
+    console.error(err);
+  })
+
+
+
+}
+
+getSourceAccountDetail(SourceAccountId)
+
+
+
+
+
+
+});
+
+
+</script>
+
+
+
+</body>
+</html>
