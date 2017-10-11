@@ -65,12 +65,12 @@
 
 $( document ).ready(function() {
 
-var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
-StellarSdk.Network.useTestNetwork();
+var server = new StellarSdk.Server('https://horizon.stellar.org');
+StellarSdk.Network.usePublicNetwork();
 
 var SourceAccountSequenceNumber =""
 
-var keypair = StellarSdk.Keypair.fromSecret('SCIX75EQXSBNFMASKQPHBQQB263BNJOINZHLTVUATABQIREMVXFSCE3F');
+var keypair = StellarSdk.Keypair.fromSecret('SD2JDOYRKYWZY7UFATIPMJOJH5GSQAPC5XLHI2T4BKCOXU36OP3IQUEA');
 var SourceAccountId = keypair.publicKey()
 
 
@@ -140,11 +140,19 @@ $("#resultHash").append(aLinkTemplate({ hash :transactionResult.hash}));
 }
 
 
-
+//test
 // Public Key
 // GDVHYIOJ6VJ2H3QOFPQTKNAAMZC2PYNJVSKDDAJ7RBMT3X2K3B55NLBT
 // Secret Key
 // SCIX75EQXSBNFMASKQPHBQQB263BNJOINZHLTVUATABQIREMVXFSCE3F
+
+
+//
+// Stellar address
+// GDNYMRRHQD6FAJRC263X6WBMW2R2GL2V2HASDXDMJZERBCL4URXPWJ3U
+
+// Secret key:
+// SD2JDOYRKYWZY7UFATIPMJOJH5GSQAPC5XLHI2T4BKCOXU36OP3IQUEA
 
 
 
@@ -161,11 +169,29 @@ server.accounts()
 
 console.log(accountResult)
 
-    $("#SourceAccountId").html(  
-    	compiled({ s1:"accountId", s2:SourceAccountId}))
-    $("#SourceAccountAsset").html(compiled({s1:"asset",s2: accountResult.balances[0].asset_type }) )
-    $("#SourceAccountBalance").html(compiled({s1:"balance",s2: accountResult.balances[0].balance }) )
-    $("#SourceAccountSequenceNumber").html(compiled({s1:"sequence",s2: accountResult.sequence }) )
+    $("#SourceAccountId").append(  
+    	compiled({ s1:"AccountId", s2:SourceAccountId}))
+    // $("#SourceAccountAsset").html(compiled({s1:"asset",s2: accountResult.balances[0].asset_type }) )
+    // $("#SourceAccountBalance").html(compiled({s1:"balance",s2: accountResult.balances[0].balance }) )
+
+
+for(var i=0;i<accountResult.balances.length;i++){
+
+
+  if(accountResult.balances[i].asset_type == "native"){
+
+$("#SourceAccountBalance").append(compiled({s1:"XLM",s2:accountResult.balances[i].balance}))
+
+  }else{
+
+$("#SourceAccountBalance").append(compiled({s1:accountResult.balances[i].asset_code,s2:accountResult.balances[i].balance}))
+
+  }
+
+}
+
+
+    // $("#SourceAccountSequenceNumber").append(compiled({s1:"Sequence",s2: accountResult.sequence }) )
     SourceAccountSequenceNumber = accountResult.sequence
   })
   .catch(function (err) {
