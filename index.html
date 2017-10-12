@@ -35,7 +35,7 @@
     <button id="send">Send</button>
     <div id="resultHash"></div>
     <script type="text/template" id="displaySelectAssetOption">
-        <option value=<%=s %>>
+        <option value=<%= s %>>
             <%= s %>
         </option>
     </script>
@@ -49,12 +49,14 @@
         </div>
     </script>
     <script type="text/template" id="displayALink">
-        <a href="http://testnet.stellarchain.io/tx/<%= hash %>" target="_blank">go to check : <%= hash %> </a>
+        <a href="http://stellarchain.io/tx/<%= hash %>" target="_blank">go to check : <%= hash %> </a>
         <br>
     </script>
     <script type="text/javascript">
     $(document).ready(function() {
 
+
+        var sourceAccountAssets ={}
         var server = new StellarSdk.Server('https://horizon.stellar.org');
         StellarSdk.Network.usePublicNetwork();
 
@@ -67,7 +69,12 @@
         $("#send").click(function() {
 
             var sendToAccountId = $("#sendToAccountId").val()
-            var sendToAsset = $("#sendToAsset").val()
+         
+              var e = document.getElementById("selectAsset");
+            var selectAsset = e.options[e.selectedIndex].value;
+          //  console.log(selectAsset)
+        
+              var sendToAsset = selectAsset
 
             var sendToAmount = $("#sendToAmount").val()
             var sendToMemo = $("#sendToMemo").val()
@@ -82,6 +89,16 @@
 
 
         function sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount, sendToMemo) {
+   
+var asset ={}
+          if(sendToAsset == "XLM"){
+     asset = StellarSdk.Asset.native()
+  
+          }else{
+     asset = new StellarSdk.Asset(sendToAsset, sourceAccountAssets[sendToAsset])
+        console.log(asset)
+          }
+
 
             var memo = StellarSdk.Memo.text(sendToMemo);
 
@@ -91,13 +108,14 @@
                 // add a payment operation to the transaction
                 .addOperation(StellarSdk.Operation.payment({
                     destination: sendToAccountId,
-                    asset: StellarSdk.Asset.native(),
+                    asset: asset,
                     amount: sendToAmount // 100.50 XLM
                 }))
 
                 .build();
 
 
+          
 
             transaction.sign(keypair); // sign the transaction
 
@@ -105,10 +123,15 @@
                 .then(function(transactionResult) {
                     console.log(transactionResult);
 
-
+    $("#SourceAccountId").empty()
+     $("#SourceAccountBalance").empty()
+     $("#SourceAccountAsset").empty()              
+     $("#SourceAccountSequenceNumber").empty()
 
                     getSourceAccountDetail(SourceAccountId)
 
+
+    
                     // $("#resultHash").append(" <a href=\"http:\/\/testnet.stellarchain.io\/tx\/"+transactionResult.hash+ "\" target=\"_blank\">go to check : "+transactionResult.hash+"<\/a><br> ")
 
                     var aLinkTemplate = _.template($("#displayALink").html());
@@ -149,7 +172,7 @@
 
         function getSourceAccountDetail(SourceAccountId) {
 
-            var compiled = _.template($("#displayAccountDetails").html());
+            var displayAccountDetailsTemplate = _.template($("#displayAccountDetails").html());
             var displaySelectAssetOptionTemplate = _.template($("#displaySelectAssetOption").html());
 
             server.accounts()
@@ -160,7 +183,7 @@
                     console.log(accountResult)
 
                     $("#SourceAccountId").append(
-                        compiled({ s1: "AccountId", s2: SourceAccountId }))
+                        displayAccountDetailsTemplate({ s1: "AccountId", s2: SourceAccountId }))
                     // $("#SourceAccountAsset").html(compiled({s1:"asset",s2: accountResult.balances[0].asset_type }) )
                     // $("#SourceAccountBalance").html(compiled({s1:"balance",s2: accountResult.balances[0].balance }) )
 
@@ -170,12 +193,14 @@
 
                         if (accountResult.balances[i].asset_type == "native") {
 
-                            $("#SourceAccountBalance").append(compiled({ s1: "XLM", s2: accountResult.balances[i].balance }))
+                            $("#SourceAccountBalance").append(displayAccountDetailsTemplate({ s1: "XLM", s2: accountResult.balances[i].balance }))
                             $("#selectAsset").append(displaySelectAssetOptionTemplate({ s: "XLM" }))
 
                         } else {
+                            
+                            sourceAccountAssets[accountResult.balances[i].asset_code]= accountResult.balances[i].asset_issuer
 
-                            $("#SourceAccountBalance").append(compiled({ s1: accountResult.balances[i].asset_code, s2: accountResult.balances[i].balance }))
+                            $("#SourceAccountBalance").append(displayAccountDetailsTemplate({ s1: accountResult.balances[i].asset_code, s2: accountResult.balances[i].balance }))
 
                             $("#selectAsset").append(displaySelectAssetOptionTemplate({ s: accountResult.balances[i].asset_code }))
 
@@ -183,9 +208,10 @@
 
                     }
 
-
+                 console.log(sourceAccountAssets)
                     // $("#SourceAccountSequenceNumber").append(compiled({s1:"Sequence",s2: accountResult.sequence }) )
                     SourceAccountSequenceNumber = accountResult.sequence
+
                 })
                 .catch(function(err) {
                     console.error(err);
