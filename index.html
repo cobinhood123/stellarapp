@@ -14,7 +14,7 @@
     <div id="SourceAccountAsset"></div>
     <div id="SourceAccountBalance"></div>
     <div>send to AccountId:
-        <input type="text" id="sendToAccountId" size="56">
+        <input type="text" id="sendToAccountId" size="68">
     </div>
     <div>send to Asset:
         <select id="selectAsset">
@@ -25,9 +25,11 @@
     </div>
     <div>send to Memo:
         <select id="selectMemoType">
+          
             <option value="memo_text">Memo_Text</option>
             <option value="memo_id">Memo_Id</option>
             <option value="memo_hash">Memo_Hash</option>
+            <option value="memo_return">Memo_Return</option>
         </select>
         <input type="text" id="sendToMemo" size="28">
     </div>
@@ -65,9 +67,11 @@
         var SourceAccountId = keypair.publicKey()
 
 
+
+
         $("#send").click(function() {
 
-          $("#send").hide()
+      //    $("#send").hide()
 
             var sendToAccountId = $("#sendToAccountId").val()
          
@@ -88,7 +92,8 @@
 try{
             sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount, selectMemoType,sendToMemo)
 }catch(err){
-  location.reload()
+ // location.reload()
+ console.log(err)
 }
 
 
@@ -123,8 +128,10 @@ var asset ={}
               
               memo =  StellarSdk.Memo.hash(sendToMemo);
 
-            }else{
+            }else if(selectMemoType =="memo_return"){
 
+memo =  StellarSdk.Memo.returnHash(sendToMemo);
+            }else{
 
             }
 
