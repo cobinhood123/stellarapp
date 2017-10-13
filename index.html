@@ -11,7 +11,6 @@
 
 <body>
     <div id="SourceAccountId"></div>
-    <div id="SourceAccountSequenceNumber"></div>
     <div id="SourceAccountAsset"></div>
     <div id="SourceAccountBalance"></div>
     <div>send to AccountId:
@@ -28,7 +27,7 @@
         <select id="selectMemoType">
             <option value="memo_text">Memo_Text</option>
             <option value="memo_id">Memo_Id</option>
-            <option value="meomo_hash">Memo_Hash</option>
+            <option value="memo_hash">Memo_Hash</option>
         </select>
         <input type="text" id="sendToMemo" size="28">
     </div>
@@ -68,19 +67,29 @@
 
         $("#send").click(function() {
 
+          $("#send").hide()
+
             var sendToAccountId = $("#sendToAccountId").val()
          
               var e = document.getElementById("selectAsset");
             var selectAsset = e.options[e.selectedIndex].value;
           //  console.log(selectAsset)
         
+
               var sendToAsset = selectAsset
 
+
+                        var e1 = document.getElementById("selectMemoType");
+            var selectMemoType = e1.options[e1.selectedIndex].value;
+          
             var sendToAmount = $("#sendToAmount").val()
             var sendToMemo = $("#sendToMemo").val()
-
-            sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount, sendToMemo)
-
+           
+try{
+            sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount, selectMemoType,sendToMemo)
+}catch(err){
+  location.reload()
+}
 
 
         });
@@ -88,7 +97,7 @@
 
 
 
-        function sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount, sendToMemo) {
+        function sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount,selectMemoType, sendToMemo) {
    
 var asset ={}
           if(sendToAsset == "XLM"){
@@ -100,8 +109,29 @@ var asset ={}
           }
 
 
-            var memo = StellarSdk.Memo.text(sendToMemo);
+          console.log(selectMemoType)
+         var memo ={}
+            if(selectMemoType =="memo_text"){
+              memo =  StellarSdk.Memo.text(sendToMemo);
+         
+          //  console.log(memo)
 
+            }else if(selectMemoType =="memo_id"){
+             memo =  StellarSdk.Memo.id(sendToMemo);
+            }else if(selectMemoType =="memo_hash"){
+              
+              
+              memo =  StellarSdk.Memo.hash(sendToMemo);
+
+            }else{
+
+
+            }
+
+         console.log(memo)
+          
+    //    var memo =StellarSdk.Memo.text(sendToMemo)
+     //   console.log(memo)
             var account = new StellarSdk.Account(SourceAccountId, SourceAccountSequenceNumber);
 
             var transaction = new StellarSdk.TransactionBuilder(account, { memo: memo })
@@ -125,8 +155,8 @@ var asset ={}
 
     $("#SourceAccountId").empty()
      $("#SourceAccountBalance").empty()
-     $("#SourceAccountAsset").empty()              
-     $("#SourceAccountSequenceNumber").empty()
+    $("#selectAsset").empty()              
+    
 
                     getSourceAccountDetail(SourceAccountId)
 
@@ -137,11 +167,13 @@ var asset ={}
                     var aLinkTemplate = _.template($("#displayALink").html());
 
                     $("#resultHash").append(aLinkTemplate({ hash: transactionResult.hash }));
+                    $("#send").show()
 
 
                 })
                 .catch(function(err) {
                     console.error(err);
+                   location.reload();
                 });
 
 
