@@ -7,14 +7,26 @@
     <script src="underscore-min.js"></script>
     <script src="backbone-min.js"></script>
     <script src="stellar-sdk.min.js"></script>
+    <script src="toml.js"></script>
 </head>
 
 <body>
     <div id="SourceAccountId"></div>
     <div id="SourceAccountAsset"></div>
     <div id="SourceAccountBalance"></div>
-    <div>send to AccountId:
-        <input type="text" id="sendToAccountId" size="68">
+    <div>send to :
+
+
+
+        <select id="selectAccountIdOrStellarAddress">
+          
+            <option value="account_id">Account Id</option>
+            <option value="stellar_address">Stellar Address</option>
+        </select>
+
+
+
+        <input type="text" id="sendToAccountIdOrStellarAddress" size="68">
     </div>
     <div>send to Asset:
         <select id="selectAsset">
@@ -69,12 +81,16 @@
 
 
 
-        $("#send").click(function() {
+        $("#send").click(function(event) {
 
-      //    $("#send").hide()
-
-            var sendToAccountId = $("#sendToAccountId").val()
          
+event.preventDefault();
+
+
+
+          $("#send").hide()
+
+
               var e = document.getElementById("selectAsset");
             var selectAsset = e.options[e.selectedIndex].value;
           //  console.log(selectAsset)
@@ -88,7 +104,19 @@
           
             var sendToAmount = $("#sendToAmount").val()
             var sendToMemo = $("#sendToMemo").val()
-           
+
+
+
+           var e2 = document.getElementById("selectAccountIdOrStellarAddress");
+            var selectAccountIdOrStellarAddress = e2.options[e2.selectedIndex].value;
+
+          
+          if(selectAccountIdOrStellarAddress == "account_id"){
+
+
+           var sendToAccountId = $("#sendToAccountIdOrStellarAddress").val()
+
+
 try{
             sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount, selectMemoType,sendToMemo)
 }catch(err){
@@ -96,8 +124,100 @@ try{
  console.log(err)
 }
 
+         
+          }else if(selectAccountIdOrStellarAddress == "stellar_address"){
+      
+
+
+var stellar_address =  $("#sendToAccountIdOrStellarAddress").val()
+//"bind*fed.network"
+console.log(stellar_address)
+getFederationStellarAccountId(SourceAccountId, SourceAccountSequenceNumber,stellar_address, sendToAsset, sendToAmount, selectMemoType,sendToMemo)
+
+
+
+
+
+          }else{
+
+
+          }
+
+
+
+           
+
+
 
         });
+
+
+
+
+
+// var federationAccountId= ""
+
+// var stellar_address = "bind*fed.network"
+// getFederationStellarAccountId(stellar_address)
+
+// setTimeout(function(){    console.log(federationAccountId) }, 10000);
+
+
+
+
+
+function getFederationStellarAccountId(SourceAccountId, SourceAccountSequenceNumber,stellar_address, sendToAsset, sendToAmount, selectMemoType,sendToMemo){
+var federationAccountId= ""
+
+ var federationDomain = stellar_address.split("*")
+
+console.log(federationDomain[1])
+
+
+$.get( "https://"+federationDomain[1]+"/.well-known/stellar.toml", function( data ) {
+  
+  
+  var config = toml.parse(data);
+       $( "#result" ).html( config.FEDERATION_SERVER );
+  console.log(config)
+
+
+
+$.get( config.FEDERATION_SERVER, { q: stellar_address, type: 'name' } )
+  .done(function( data ) {
+    console.log(data)
+  //  console.log(  data.account_id );
+
+    federationAccountId = data.account_id
+
+try{
+  var sendToAccountId = federationAccountId
+  console.log(sendToAccountId)
+         sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber,sendToAccountId, sendToAsset, sendToAmount, selectMemoType,sendToMemo)
+}catch(err){
+ // location.reload()
+ console.log(err)
+}
+
+
+
+
+
+
+
+  });
+
+
+  // q: 'tunde_adebayo*your_org.com',
+  //   type: 'name'
+
+
+});
+
+}
+
+
+
 
 
 
@@ -180,7 +300,7 @@ memo =  StellarSdk.Memo.returnHash(sendToMemo);
                 })
                 .catch(function(err) {
                     console.error(err);
-                   location.reload();
+             //      location.reload();
                 });
 
 
@@ -250,6 +370,7 @@ memo =  StellarSdk.Memo.returnHash(sendToMemo);
                  console.log(sourceAccountAssets)
                     // $("#SourceAccountSequenceNumber").append(compiled({s1:"Sequence",s2: accountResult.sequence }) )
                     SourceAccountSequenceNumber = accountResult.sequence
+                    console.log(SourceAccountSequenceNumber)
 
                 })
                 .catch(function(err) {
