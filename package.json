@@ -10,6 +10,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.2",
     "stellar-sdk": "^0.7.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cobinhood123/stellarapp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cobinhood123/stellarapp/issues"
+  },
+  "homepage": "https://github.com/cobinhood123/stellarapp#readme"
 }
