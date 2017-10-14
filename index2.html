@@ -15,10 +15,17 @@
     <div id="SourceAccountAsset"></div>
     <div id="SourceAccountBalance"></div>
     <div>send to :
+
+
+
         <select id="selectAccountIdOrStellarAddress">
+          
             <option value="account_id">Account Id</option>
             <option value="stellar_address">Stellar Address</option>
         </select>
+
+
+
         <input type="text" id="sendToAccountIdOrStellarAddress" size="68">
     </div>
     <div>send to Asset:
@@ -30,6 +37,7 @@
     </div>
     <div>send to Memo:
         <select id="selectMemoType">
+          
             <option value="memo_text">Memo_Text</option>
             <option value="memo_id">Memo_Id</option>
             <option value="memo_hash">Memo_Hash</option>
@@ -40,7 +48,7 @@
     <button id="send">Send</button>
     <div id="resultHash"></div>
     <script type="text/template" id="displaySelectAssetOption">
-        <option value=<%=s %>>
+        <option value=<%= s %>>
             <%= s %>
         </option>
     </script>
@@ -57,124 +65,194 @@
         <a href="http://stellarchain.io/tx/<%= hash %>" target="_blank">go to check : <%= hash %> </a>
         <br>
     </script>
-    
+    <script type="text/javascript">
+    $(document).ready(function() {
 
 
-     
-     <script type="text/javascript">
-     	
+      var object = {};
 
-     	 $(document).ready(function() {
+_.extend(object, Backbone.Events);
+
+object.on("send", function(SourceAccountId, SourceAccountSequenceNumber,sendToAccountId, sendToAsset, sendToAmount, selectMemoType,sendToMemo) {
+  
+sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount,selectMemoType, sendToMemo)
+
+});
+
+//object.trigger("send", "an event","ffss");
 
 
-
-     var sourceAccountAssets ={}
+        var sourceAccountAssets ={}
         var server = new StellarSdk.Server('https://horizon.stellar.org');
         StellarSdk.Network.usePublicNetwork();
-    //    var SourceAccountSequenceNumber = ""
+
+        var SourceAccountSequenceNumber = ""
+
         var keypair = StellarSdk.Keypair.fromSecret('SD2JDOYRKYWZY7UFATIPMJOJH5GSQAPC5XLHI2T4BKCOXU36OP3IQUEA');
         var SourceAccountId = keypair.publicKey()
 
- getSourceAccountDetail(SourceAccountId)
 
 
-       $("#send").click(function(event) {
+
+        $("#send").click(function(event) {
+
          
-event.preventDefault()
+event.preventDefault();
 
 
 
-
-let promise =  new Promise(function(resolve, reject) {
-
-           server.accounts()
-                .accountId(SourceAccountId)
-                .call()
-                .then(function(accountResult) {
-
-                	resolve(accountResult.sequence)
-                })
+       //   $("#send").hide()
 
 
-})
-
-
-
-
-   var e = document.getElementById("selectAsset");
+              var e = document.getElementById("selectAsset");
             var selectAsset = e.options[e.selectedIndex].value;
           //  console.log(selectAsset)
         
+
               var sendToAsset = selectAsset
+
+
                         var e1 = document.getElementById("selectMemoType");
             var selectMemoType = e1.options[e1.selectedIndex].value;
           
             var sendToAmount = $("#sendToAmount").val()
             var sendToMemo = $("#sendToMemo").val()
+
+
+
            var e2 = document.getElementById("selectAccountIdOrStellarAddress");
-       var selectAccountIdOrStellarAddress = e2.options[e2.selectedIndex].value;
+            var selectAccountIdOrStellarAddress = e2.options[e2.selectedIndex].value;
+
+          
+          if(selectAccountIdOrStellarAddress == "account_id"){
 
 
-
-	       
- if(selectAccountIdOrStellarAddress == "account_id"){
-  var sendToAccountId = $("#sendToAccountIdOrStellarAddress").val()
-
-//return [sequenceNumber,sendToAccountId]
-promise.then(function(SourceAccountSequenceNumber){
-sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount,selectMemoType, sendToMemo)
-
-})
+           var sendToAccountId = $("#sendToAccountIdOrStellarAddress").val()
 
 
+try{
+    console.log("-------------")
+    console.log(SourceAccountId)
+    console.log(SourceAccountSequenceNumber)
+    console.log(sendToAccountId)
+    console.log(sendToAsset)
+    console.log(sendToAmount)
+    console.log(SourceAccountId)
+    console.log(selectMemoType)
+    console.log(sendToMemo)
+console.log("-------------")
 
- }else{
 
+  object.trigger("send",SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount, selectMemoType,sendToMemo)
+}catch(err){
+ // location.reload()
+ console.log(err)
+}
 
+         
+          }else if(selectAccountIdOrStellarAddress == "stellar_address"){
+      
 
-
-promise.then((SourceAccountSequenceNumber)=>{
 
 var stellar_address =  $("#sendToAccountIdOrStellarAddress").val()
-var federationDomain = stellar_address.split("*")
+//"bind*fed.network"
+console.log(stellar_address)
+getFederationStellarAccountId(stellar_address)
+
+
+
+
+
+          }else{
+
+
+          }
+
+
+
+           
+
+
+
+        });
+
+
+
+
+
+// var federationAccountId= ""
+
+// var stellar_address = "bind*fed.network"
+// getFederationStellarAccountId(stellar_address)
+
+// setTimeout(function(){    console.log(federationAccountId) }, 10000);
+
+
+
+
+
+function getFederationStellarAccountId(stellar_address){
+var federationAccountId= ""
+
+ var federationDomain = stellar_address.split("*")
+
 console.log(federationDomain[1])
+
+
 $.get( "https://"+federationDomain[1]+"/.well-known/stellar.toml", function( data ) {
   
   
   var config = toml.parse(data);
        $( "#result" ).html( config.FEDERATION_SERVER );
   console.log(config)
+
+
+
 $.get( config.FEDERATION_SERVER, { q: stellar_address, type: 'name' } )
   .done(function( data ) {
-  	console.log(data)
- 
-  var sendToAccountId = data.account_id
-  
- sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount,selectMemoType, sendToMemo)
+    console.log(data)
+  //  console.log(  data.account_id );
+
+    federationAccountId = data.account_id
+
+try{
+  var sendToAccountId = federationAccountId
+  console.log(sendToAccountId)
+        
 
 
-  })
-})
-})
+     
 
 
-
-
-
- }
-
-
-})
-
-
-
-//})
+}catch(err){
+ // location.reload()
+ console.log(err)
+}
 
 
 
 
 
- function sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount,selectMemoType, sendToMemo) {
+
+
+  });
+
+
+  // q: 'tunde_adebayo*your_org.com',
+  //   type: 'name'
+
+
+});
+
+}
+
+
+
+
+
+
+
+        function sendToAccountIdAmount(SourceAccountId, SourceAccountSequenceNumber, sendToAccountId, sendToAsset, sendToAmount,selectMemoType, sendToMemo) {
    
 var asset ={}
           if(sendToAsset == "XLM"){
@@ -264,37 +342,66 @@ memo =  StellarSdk.Memo.returnHash(sendToMemo);
         }
 
 
+        //test
+        // Public Key
+        // GDVHYIOJ6VJ2H3QOFPQTKNAAMZC2PYNJVSKDDAJ7RBMT3X2K3B55NLBT
+        // Secret Key
+        // SCIX75EQXSBNFMASKQPHBQQB263BNJOINZHLTVUATABQIREMVXFSCE3F
 
 
-  function getSourceAccountDetail(SourceAccountId) {
+        //
+        // Stellar address
+        // GDNYMRRHQD6FAJRC263X6WBMW2R2GL2V2HASDXDMJZERBCL4URXPWJ3U
+
+        // Secret key:
+        // SD2JDOYRKYWZY7UFATIPMJOJH5GSQAPC5XLHI2T4BKCOXU36OP3IQUEA
+
+
+
+
+        function getSourceAccountDetail(SourceAccountId) {
 
             var displayAccountDetailsTemplate = _.template($("#displayAccountDetails").html());
             var displaySelectAssetOptionTemplate = _.template($("#displaySelectAssetOption").html());
 
-             server.accounts()
+            server.accounts()
                 .accountId(SourceAccountId)
                 .call()
                 .then(function(accountResult) {
+
                     console.log(accountResult)
+
                     $("#SourceAccountId").append(
                         displayAccountDetailsTemplate({ s1: "AccountId", s2: SourceAccountId }))
                     // $("#SourceAccountAsset").html(compiled({s1:"asset",s2: accountResult.balances[0].asset_type }) )
                     // $("#SourceAccountBalance").html(compiled({s1:"balance",s2: accountResult.balances[0].balance }) )
+
+
                     for (var i = 0; i < accountResult.balances.length; i++) {
+
+
                         if (accountResult.balances[i].asset_type == "native") {
+
                             $("#SourceAccountBalance").append(displayAccountDetailsTemplate({ s1: "XLM", s2: accountResult.balances[i].balance }))
                             $("#selectAsset").append(displaySelectAssetOptionTemplate({ s: "XLM" }))
+
                         } else {
                             
                             sourceAccountAssets[accountResult.balances[i].asset_code]= accountResult.balances[i].asset_issuer
+
                             $("#SourceAccountBalance").append(displayAccountDetailsTemplate({ s1: accountResult.balances[i].asset_code, s2: accountResult.balances[i].balance }))
+
                             $("#selectAsset").append(displaySelectAssetOptionTemplate({ s: accountResult.balances[i].asset_code }))
+
                         }
+
                     }
-              //   console.log(sourceAccountAssets)
+
+                 console.log(sourceAccountAssets)
                     // $("#SourceAccountSequenceNumber").append(compiled({s1:"Sequence",s2: accountResult.sequence }) )
-              //      SourceAccountSequenceNumber = accountResult.sequence
-             //       console.log(SourceAccountSequenceNumber)
+                    SourceAccountSequenceNumber = accountResult.sequence
+                    console.log(SourceAccountSequenceNumber)
+
                 })
                 .catch(function(err) {
                     console.error(err);
@@ -302,21 +409,25 @@ memo =  StellarSdk.Memo.returnHash(sendToMemo);
 
 
 
-
-  }
-
+        }
 
 
 
+    
+
+
+        getSourceAccountDetail(SourceAccountId)
 
 
 
-     	 })
 
 
 
-     </script>
 
+
+
+    });
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script src="jquery-3.2.1.min.js"></script>
+	<script src="toml.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	
+
+$(document).ready(function() {
+
+
+
+// let myFirstPromise = new Promise((resolve,reject) =>{
+
+// 	setTimeout(function(){
+// 		console.log("okokokokok")
+// 		resolve("success!ok!")
+// 	},10000)
+// })
+
+
+// myFirstPromise.then((successMessage)=>{
+// 	console.log("okokok    "+ successMessage)
+// })
+var stellar_address = "btc*fed.network"
+
+new Promise(function(resolve, reject) {
+
+     
+var federationAccountId= ""
+ var federationDomain = stellar_address.split("*")
+console.log(federationDomain[1])
+$.get( "https://"+federationDomain[1]+"/.well-known/stellar.toml", function( data ) {
+  
+  
+  var config = toml.parse(data);
+       $( "#result" ).html( config.FEDERATION_SERVER );
+  console.log(config)
+$.get( config.FEDERATION_SERVER, { q: stellar_address, type: 'name' } )
+  .done(function( data ) {
+    console.log(data)
+  //  console.log(  data.account_id );
+   setTimeout(()=>{
+   	resolve(data.account_id)
+   },100)
+
+   
+  });
+  // q: 'tunde_adebayo*your_org.com',
+  //   type: 'name'
+});
+
+
+
+
+
+
+}).then(function(result){
+
+	console.log(result)
+
+	return new Promise((resolve,reject)=>{
+setTimeout(() => resolve(["2000 hao miao zhi hou","aaa"]), 1000);
+
+	})
+}).then(function(result){
+console.log(result[1])
+    return new Promise((resolve,reject)=>{
+ setTimeout(()=>{ resolve("3000 hao miao zhi hou")},3000)
+
+    })
+
+}).then(function(result){
+
+console.log(result)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+})
+
+
+
+
+
+</script>
+
+
+</body>
+</html>
